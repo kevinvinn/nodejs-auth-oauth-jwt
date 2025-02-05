@@ -1,0 +1,1098 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Auth",
+    "version": "1.0.0",
+    "description": "API untuk Authentication dan Authorization"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Environment"
+    }
+  ],
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "summary": "Login pengguna",
+        "description": "Melakukan login pengguna dengan email dan password. Jika akun belum diverifikasi, akan ada respon khusus.",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                  },
+                  "user_password": {
+                    "type": "string",
+                    "example": "password123"
+                  }
+                },
+                "required": ["email", "user_password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Login berhasil."
+                    },
+                    "token": {
+                      "type": "string",
+                      "example": "jwt_token_here"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Akun belum diverifikasi. Harap verifikasi melalui OTP terlebih dahulu.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Akun belum diverifikasi. Harap verifikasi melalui OTP terlebih dahulu."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Password salah",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Password salah."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Email tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Email tidak ditemukan."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Terjadi kesalahan saat login",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Terjadi kesalahan saat login."
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Error detail here"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "summary": "Logout",
+        "description": "Logout dan blacklist token JWT.",
+        "tags": ["Auth"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logout berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Logout berhasil. Token telah di-blacklist."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Token tidak valid atau sudah kadaluarsa."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Kesalahan pada server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "summary": "Registrasi pengguna",
+        "description": "Melakukan registrasi pengguna baru dengan email, password, dan nomor telepon. OTP akan dikirim untuk verifikasi.",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_name": {
+                    "type": "string",
+                    "example": "John Doe",
+                    "description": "Nama lengkap pengguna. Tidak boleh berupa angka."
+                  },
+                  "user_email": {
+                    "type": "string",
+                    "example": "john.doe@example.com",
+                    "description": "Email pengguna yang valid."
+                  },
+                  "user_password": {
+                    "type": "string",
+                    "example": "password123",
+                    "description": "Password pengguna minimal 8 karakter."
+                  }
+                },
+                "required": ["user_name", "user_email", "user_password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registrasi berhasil, kode OTP telah dikirim ke email pengguna.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Registrasi berhasil. Kode OTP telah dikirim ke email Anda."
+                    },
+                    "otp_request_reset_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-12-15T12:00:00.000Z",
+                      "description": "Waktu reset permintaan OTP berikutnya."
+                    },
+                    "last_otp_requested_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-12-15T11:59:00.000Z",
+                      "description": "Waktu permintaan OTP terakhir kali."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validasi input gagal (misalnya, email atau nomor telepon sudah terdaftar).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "msg": {
+                            "type": "string",
+                            "example": "Email sudah terdaftar."
+                          },
+                          "param": {
+                            "type": "string",
+                            "example": "user_email"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Kesalahan server saat mencoba mendaftarkan user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Gagal mendaftarkan user."
+                    },
+                    "detail": {
+                      "type": "string",
+                      "example": "Terjadi kesalahan pada database."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify-otp": {
+      "post": {
+        "summary": "Verifikasi OTP",
+        "tags": ["Auth"],
+        "description": "Verifikasi OTP yang dikirimkan ke email pengguna untuk aktivasi akun.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                  },
+                  "otp_code": {
+                    "type": "string",
+                    "example": "123456"
+                  }
+                },
+                "required": ["user_email", "otp_code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verifikasi OTP berhasil.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Verifikasi berhasil."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Kode OTP salah atau sudah kedaluwarsa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Kode OTP salah atau sudah kedaluwarsa."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pengguna tidak ditemukan.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Pengguna tidak ditemukan."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Terjadi kesalahan saat verifikasi OTP.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Terjadi kesalahan saat verifikasi OTP."
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Error detail here"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/resend-otp": {
+      "post": {
+        "summary": "Resend OTP",
+        "description": "Mengirim ulang kode OTP ke email pengguna yang terdaftar jika kode OTP sebelumnya tidak diterima atau sudah kedaluwarsa.",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                  }
+                },
+                "required": ["user_email"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP berhasil dikirim ulang.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Kode OTP telah dikirim ulang ke email Anda."
+                    },
+                    "last_otp_requested_at": {
+                      "type": "string",
+                      "example": "2024-12-15T12:34:56.000Z"
+                    },
+                    "otp_request_reset_at": {
+                      "type": "string",
+                      "example": "2024-12-15T12:35:56.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Permintaan tidak valid atau melebihi batas percobaan.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Silakan tunggu beberapa saat sebelum mencoba lagi."
+                    },
+                    "last_otp_requested_at": {
+                      "type": "string",
+                      "example": "2024-12-15T12:34:56.000Z"
+                    },
+                    "otp_request_reset_at": {
+                      "type": "string",
+                      "example": "2024-12-15T13:34:56.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pengguna tidak ditemukan.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User tidak ditemukan."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Terjadi kesalahan saat mengirim ulang OTP.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Gagal mengirim ulang kode OTP."
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Error detail here"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/forget-password": {
+      "post": {
+        "summary": "Lupa Password",
+        "description": "Mengirim link reset password ke email pengguna.",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Link reset password berhasil dikirim",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Link reset password telah dikirim ke email."
+                    },
+                    "reset_link": {
+                      "type": "string",
+                      "example": "http://localhost:3000/password/reset-password?token=eyJhbGciOiJIUzI1NiIsIn..."
+                    },
+                    "token": {
+                      "type": "string",
+                      "example": "eyABCdefg..."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Email tidak ditemukan.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Email tidak terdaftar."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Kesalahan pada server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "summary": "Reset Password",
+        "description": "Reset password pengguna dengan token yang valid.",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "Token reset password yang valid",
+                    "example": "<reset_password_token>"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Password baru (minimal 8 karakter)",
+                    "example": "newPassword123"
+                  },
+                  "confirmPassword": {
+                    "type": "string",
+                    "description": "Konfirmasi password baru",
+                    "example": "newPassword123"
+                  }
+                },
+                "required": ["token", "password", "confirmPassword"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password berhasil direset",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Password berhasil direset! Silakan login."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validasi gagal atau token tidak valid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Password dan konfirmasi password tidak cocok atau token tidak valid."
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "msg": {
+                            "type": "string",
+                            "example": "Password minimal 8 karakter."
+                          },
+                          "param": {
+                            "type": "string",
+                            "example": "password"
+                          },
+                          "location": {
+                            "type": "string",
+                            "example": "body"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Token tidak valid atau sudah kedaluwarsa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Token tidak valid atau sudah kedaluwarsa"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Kesalahan pada server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/user/all-users": {
+      "get": {
+        "summary": "Get All Users",
+        "description": "Menampilkan semua data pengguna.",
+        "tags": ["User"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Menampilkan semua pengguna",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "user_id": {
+                        "type": "string",
+                        "example": "12345"
+                      },
+                      "user_name": {
+                        "type": "string",
+                        "example": "John Doe"
+                      },
+                      "user_email": {
+                        "type": "string",
+                        "example": "john.doe@example.com"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Kesalahan pada server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/user/get-user": {
+      "get": {
+        "summary": "Get User by ID",
+        "description": "Mengambil data pengguna berdasarkan ID yang ada di dalam JWT.",
+        "tags": ["User"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Menampilkan pengguna berdasarkan ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Pengguna ditemukan"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user_id": {
+                          "type": "string",
+                          "example": "12345"
+                        },
+                        "user_name": {
+                          "type": "string",
+                          "example": "John Doe"
+                        },
+                        "user_email": {
+                          "type": "string",
+                          "example": "john.doe@example.com"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pengguna tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Pengguna tidak ditemukan"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Kesalahan pada server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Gagal mengambil data pengguna"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/user/update-user": {
+      "put": {
+        "summary": "Update User",
+        "description": "Memperbarui data pengguna berdasarkan user_id yang ada di JWT.",
+        "tags": ["User"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_name": {
+                    "type": "string",
+                    "description": "Nama pengguna. Tidak boleh berupa angka.",
+                    "example": "John Doe"
+                  },
+                  "user_email": {
+                    "type": "string",
+                    "description": "Email pengguna. Harus dalam format email yang valid.",
+                    "example": "john.doe@example.com"
+                  },
+
+                  "user_password": {
+                    "type": "string",
+                    "description": "Password baru pengguna. Minimal 8 karakter.",
+                    "example": "newpassword123"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User berhasil diperbarui",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User berhasil diperbarui"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user_id": {
+                          "type": "string",
+                          "example": "12345"
+                        },
+                        "user_name": {
+                          "type": "string",
+                          "example": "John Doe"
+                        },
+                        "user_email": {
+                          "type": "string",
+                          "example": "john.doe@example.com"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request, data tidak valid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Data tidak valid"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "msg": {
+                            "type": "string",
+                            "example": "Nama tidak boleh berupa angka."
+                          },
+                          "param": {
+                            "type": "string",
+                            "example": "user_name"
+                          },
+                          "location": {
+                            "type": "string",
+                            "example": "body"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Kesalahan pada server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Gagal memperbarui user"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/user/delete-user": {
+      "delete": {
+        "summary": "Delete User",
+        "description": "Menghapus pengguna berdasarkan user_id yang ada di JWT.",
+        "tags": ["User"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User berhasil dihapus",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User berhasil dihapus"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pengguna tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Pengguna tidak ditemukan"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Kesalahan pada server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Gagal menghapus user"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    }
+  }
+}

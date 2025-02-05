@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  user_id String @id @default(uuid())
+  user_name String
+  user_email String @unique
+  user_password String
+  user_is_active UserStatus @default(unverified) 
+  passwordResetTokens Password_reset_tokens[]
+
+  otps                 Otp[]                
+}
+
+model Otp {
+  otp_id            String   @id @default(uuid())       
+  user_id           String   @unique                   
+  otp_code          String                              
+  otp_expires_at    DateTime                           
+  otp_is_used       Boolean  @default(false)           
+  otp_request_count Int      @default(0)               
+  otp_request_reset_at DateTime?                       
+  last_otp_requested_at DateTime?                      
+  user              Users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+
+model Password_reset_tokens {
+  id String @id @default(uuid())
+  token String @unique
+  user_id String
+  created_at DateTime @default(now())
+  user Users @relation(fields: [user_id], references: [user_id])
+}
+
+enum UserStatus {
+  unverified
+  verified
+}
